@@ -2,5 +2,7 @@
 
 int main()
 {
+    Tetris t;
+    t.run();
     return 0;
 }
