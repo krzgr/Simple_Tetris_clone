@@ -1,6 +1,5 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
-#include <iostream>
 #include <vector>
 #include <random>
 #include <array>
@@ -13,7 +12,7 @@ public:
 	static const int cols = 16;
 	static const int brickSize = 35;
 	static const int delay = 200;
-	static const int padding = 5;
+	static const int padding = 3;
 
 	static const std::array<std::array<int, 4>, 7> tetrominos;
 
