@@ -113,6 +113,26 @@ void Tetris::undoRotation()
     }
 }
 
+void Tetris::moveLeft()
+{
+    for (auto& piece : tetromino)
+        piece.first--;
+
+    if(isTetrominoColliding())
+        for (auto& piece : tetromino)
+            piece.first++;
+}
+
+void Tetris::moveRight()
+{
+    for (auto& piece : tetromino)
+        piece.first++;
+
+    if (isTetrominoColliding())
+        for (auto& piece : tetromino)
+            piece.first--;
+}
+
 void Tetris::rotate()
 {
     int x = tetromino[0].first;
@@ -125,6 +145,9 @@ void Tetris::rotate()
         tetromino[i].first = x1;
         tetromino[i].second = y1;
     }
+
+    if (isTetrominoColliding())
+        undoRotation();
 }
 
 void Tetris::genNewTetromino()
@@ -137,5 +160,36 @@ void Tetris::genNewTetromino()
         tetromino[i].first = tetrominos[tetrominoID][i] % 2 + (cols / 2) - 1;
         tetromino[i].second = tetrominos[tetrominoID][i] / 2;
     }
+
+    if (isTetrominoColliding())
+        reset();
+}
+
+void Tetris::drop()
+{
+    for (auto& piece : tetromino)
+        piece.second++;
+
+    if (isTetrominoColliding())
+    {
+        for (auto& piece : tetromino)
+            grid[piece.second - 1][piece.first] = tetrominoColorID;
+
+        genNewTetromino();
+    }
+}
+
+bool Tetris::isTetrominoColliding()
+{
+
+    for (auto& piece : tetromino)
+    {
+        if (piece.first < 0 || piece.first >= cols || piece.second < 0 || piece.second >= rows)
+            return true;
+        if (grid[piece.second][piece.first] != 0)
+            return true;
+    }
+    
+    return false;
 }
 
