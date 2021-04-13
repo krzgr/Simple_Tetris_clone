@@ -1,8 +1,10 @@
 #include "Tetris.hpp"
 
+const sf::Color backgrundColor = sf::Color(28, 47, 57);
+
 const sf::Color Tetris::colors[] =
 {
-    sf::Color(28, 15, 6),
+    sf::Color(38, 57, 61),
     sf::Color(234, 213, 0),
     sf::Color(219, 132, 1),
     sf::Color(90, 176, 189),
@@ -27,8 +29,8 @@ const int Tetris::sizeColors = sizeof(Tetris::colors) / sizeof(Tetris::colors[0]
 
 void Tetris::draw()
 {
-    window.clear(colors[0]);
-    brick.setPosition(sf::Vector2f(0.0f, 0.0f));
+    window.clear(backgrundColor);
+    brick.setPosition(sf::Vector2f((float)padding, (float)padding));
 
     for (auto& row : grid)
     {
@@ -36,16 +38,16 @@ void Tetris::draw()
         {
             brick.setFillColor(colors[val]);
             window.draw(brick);
-            brick.move(sf::Vector2f(brickSize, 0.0f));
+            brick.move(sf::Vector2f(float(brickSize + padding), 0.0f));
         }
-        brick.setPosition(sf::Vector2f(0.0f, brick.getPosition().y + (float)brickSize));
+        brick.setPosition(sf::Vector2f((float)padding, brick.getPosition().y + float(brickSize + padding)));
     }
 
     brick.setFillColor(colors[tetrominoColorID]);
 
     for (auto& piece : tetromino)
     {
-        brick.setPosition(sf::Vector2f(piece.first * brickSize, piece.second * brickSize));
+        brick.setPosition(sf::Vector2f(float(piece.first * (brickSize + padding) + padding), float(piece.second * (brickSize + padding) + padding)));
         window.draw(brick);
     }
         
@@ -55,16 +57,35 @@ void Tetris::draw()
 
 void Tetris::run()
 {
-    window.create(sf::VideoMode(brickSize * cols, brickSize * rows), "Tetris v1.0", sf::Style::Titlebar | sf::Style::Close);
+    window.create(sf::VideoMode((brickSize + padding) * cols + padding, (brickSize + padding) * rows + padding), 
+        "Tetris v1.0", sf::Style::Titlebar | sf::Style::Close);
 
     while (window.isOpen())
     {
-        while (window.pollEvent(event))
+        clock.restart();
+        while (clock.getElapsedTime().asMilliseconds() < delay)
         {
-            if (event.type == sf::Event::Closed)
-                window.close();
+
+            while (window.pollEvent(event))
+            {
+                if (event.type == sf::Event::Closed)
+                    window.close();
+                else if (event.type == sf::Event::KeyPressed)
+                {
+                    switch (event.key.code)
+                    {
+                    case sf::Keyboard::Up:    rotate(); break;
+                    case sf::Keyboard::Down:  drop(); break;
+                    case sf::Keyboard::Left:  moveLeft(); break;
+                    case sf::Keyboard::Right: moveRight(); break;
+                    }
+
+                    draw();
+                }
+            }
         }
 
+        drop();
         draw();
     }
 }
@@ -80,9 +101,10 @@ void Tetris::reset()
 
 Tetris::Tetris()
     :event(), brick(sf::Vector2f(brickSize, brickSize)), grid(rows), 
-        tetrominoDistribution(1, tetrominos.size() - 1), colorDistribution(1, sizeColors - 1), rng()
-
+        tetrominoDistribution(0, (int)tetrominos.size() - 1), colorDistribution(1, sizeColors - 1),
+        rng((unsigned)std::chrono::system_clock::now().time_since_epoch().count())
 {
+
     for (int i = 0; i < rows; i++)
     {
         grid.emplace_back(std::vector<uint8_t>(cols));
@@ -172,8 +194,26 @@ void Tetris::drop()
 
     if (isTetrominoColliding())
     {
+        int min_y = rows;
+        int max_y = 0;
         for (auto& piece : tetromino)
-            grid[piece.second - 1][piece.first] = tetrominoColorID;
+        {
+            piece.second--;
+
+            if (min_y > piece.second)
+                min_y = piece.second;
+            else if (max_y < piece.second)
+                max_y = piece.second;
+
+            grid[piece.second][piece.first] = tetrominoColorID;
+        }
+
+        for(int i = max_y; i >= min_y; i--)
+            if (isRowFilled(i))
+            {
+                clearRow(i);
+                i++;
+            }
 
         genNewTetromino();
     }
@@ -193,3 +233,17 @@ bool Tetris::isTetrominoColliding()
     return false;
 }
 
+bool Tetris::isRowFilled(int row)
+{
+    for (auto& cell : grid[row])
+        if (cell == 0)
+            return false;
+    return true;
+}
+
+void Tetris::clearRow(int row)
+{
+    for (int i = row; i > 0; i--)
+        for (int j = 0; j < cols; j++)
+            grid[i][j] = grid[i - 1][j];
+}

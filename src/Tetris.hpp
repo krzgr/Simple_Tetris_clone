@@ -4,6 +4,7 @@
 #include <vector>
 #include <random>
 #include <array>
+#include <chrono>
 
 class Tetris
 {
@@ -11,15 +12,19 @@ public:
 	static const int rows = 20;
 	static const int cols = 16;
 	static const int brickSize = 35;
+	static const int delay = 200;
+	static const int padding = 5;
 
 	static const std::array<std::array<int, 4>, 7> tetrominos;
 
+	static const sf::Color backgroundColor;
 	static const sf::Color colors[];
 	static const int sizeColors;
 private:
 	sf::RenderWindow window;
 	sf::RectangleShape brick;
 	sf::Event event;
+	sf::Clock clock;
 	std::vector<std::vector<uint8_t>> grid;
 
 	std::array<std::pair<int, int>, 4> tetromino;
@@ -38,8 +43,8 @@ private:
 
 	bool isTetrominoColliding();
 
-	bool checkLine();
-	void clearLine();
+	bool isRowFilled(int row);
+	void clearRow(int row);
 
 	void reset();
 
