@@ -28,15 +28,17 @@ private:
 
 	std::array<std::pair<int, int>, 4> tetromino;
 	uint8_t tetrominoColorID;
+	uint8_t tetrominoID;
 
 	std::mt19937 rng;
-	std::uniform_int_distribution<short int> colorDistribution;
+	std::uniform_int_distribution<int> colorDistribution;
 	std::uniform_int_distribution<int> tetrominoDistribution;
 private:
 	void moveLeft();
 	void moveRight();
-	void rotate();
-	void undoRotation();
+	void tryRotation();
+	void rotateLeft();
+	void rotateRight();
 	void genNewTetromino();
 	void drop();
 

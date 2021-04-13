@@ -16,13 +16,13 @@ const sf::Color Tetris::colors[] =
 
 const std::array<std::array<int, 4>, 7> Tetris::tetrominos
 {
-    std::array<int, 4>{3,1,5,7},
-    std::array<int, 4>{3,1,2,5},
-    std::array<int, 4>{3,0,1,2},
-    std::array<int, 4>{3,0,1,5},
-    std::array<int, 4>{3,1,4,5},
-    std::array<int, 4>{3,0,2,5},
-    std::array<int, 4>{3,1,2,4}
+    std::array<int, 4>{5,1,3,7}, // Long
+    std::array<int, 4>{3,0,1,2}, // O
+    std::array<int, 4>{3,1,2,5}, // T
+    std::array<int, 4>{3,0,1,5}, // L
+    std::array<int, 4>{3,1,4,5}, // J
+    std::array<int, 4>{2,3,0,5}, // Z
+    std::array<int, 4>{2,3,1,4}  // S
 };
 
 const int Tetris::sizeColors = sizeof(Tetris::colors) / sizeof(Tetris::colors[0]);
@@ -74,7 +74,7 @@ void Tetris::run()
                 {
                     switch (event.key.code)
                     {
-                    case sf::Keyboard::Up:    rotate(); break;
+                    case sf::Keyboard::Up:    tryRotation(); break;
                     case sf::Keyboard::Down:  drop(); break;
                     case sf::Keyboard::Left:  moveLeft(); break;
                     case sf::Keyboard::Right: moveRight(); break;
@@ -121,8 +121,17 @@ Tetris::~Tetris()
 
 }
 
-void Tetris::undoRotation()
+void Tetris::rotateLeft()
 {
+    if (tetrominoID == 1) // O
+        return;
+    else if ((tetrominoID == 0 && tetromino[0].second == tetromino[1].second) // Long
+          || (tetrominoID >= 5 && tetromino[0].second == tetromino[1].second)) // S and Z
+    {
+        rotateRight();
+        return;
+    }
+
     int x = tetromino[0].first;
     int y = tetromino[0].second;
 
@@ -155,8 +164,25 @@ void Tetris::moveRight()
             piece.first--;
 }
 
-void Tetris::rotate()
+void Tetris::tryRotation()
 {
+    rotateRight();
+
+    if (isTetrominoColliding())
+        rotateLeft();
+}
+
+void Tetris::rotateRight()
+{
+    if (tetrominoID == 1) // O
+        return;
+    else if ((tetrominoID == 0 && tetromino[0].first == tetromino[1].first)  // Long
+          || (tetrominoID >= 5 && tetromino[0].first == tetromino[1].first)) // S and Z
+    {
+        rotateLeft();
+        return;
+    }
+
     int x = tetromino[0].first;
     int y = tetromino[0].second;
 
@@ -167,20 +193,31 @@ void Tetris::rotate()
         tetromino[i].first = x1;
         tetromino[i].second = y1;
     }
-
-    if (isTetrominoColliding())
-        undoRotation();
 }
 
 void Tetris::genNewTetromino()
 {
-    int tetrominoID = tetrominoDistribution(rng);
+    tetrominoID = (uint8_t)tetrominoDistribution(rng);
     tetrominoColorID = (uint8_t)colorDistribution(rng);
 
     for (int i = 0; i < 4; i++)
     {
         tetromino[i].first = tetrominos[tetrominoID][i] % 2 + (cols / 2) - 1;
         tetromino[i].second = tetrominos[tetrominoID][i] / 2;
+    }
+    
+    rotateRight();
+    if (tetrominoID == 0)
+    {
+        for (auto& piece : tetromino)
+            piece.second -= 2;
+        //we need to push bricks up
+    }
+    else if (tetrominoID >= 5) // S and Z
+    {
+        for (auto& piece : tetromino)
+            piece.second--;
+        //here also
     }
 
     if (isTetrominoColliding())
