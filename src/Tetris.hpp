@@ -9,11 +9,14 @@ class Tetris
 {
 public:
 	static const int rows = 20;
-	static const int cols = 16;
+	static const int cols = 10;
 	static const int brickSize = 35;
-	static const int delay = 200;
 	static const int padding = 3;
+	static const int sideBarHeight = 50;
 
+	static const unsigned int framerateLimit = 60;
+	static const int zeroLevelFramesPerGridcell = 48;
+	
 	static const std::array<std::array<int, 4>, 7> tetrominos;
 
 	static const sf::Color backgroundColor;
@@ -26,6 +29,13 @@ private:
 	sf::Clock clock;
 	std::vector<std::vector<uint8_t>> grid;
 
+	int score;
+	int level;
+	int linesBeforeLevelIncreases;
+	int delay;
+
+	bool softDrop;
+
 	std::array<std::pair<int, int>, 4> tetromino;
 	uint8_t tetrominoColorID;
 	uint8_t tetrominoID;
@@ -36,9 +46,11 @@ private:
 private:
 	void moveLeft();
 	void moveRight();
+
 	void tryRotation();
-	void rotateLeft();
 	void rotateRight();
+	void rotateLeft();
+
 	void genNewTetromino();
 	void drop();
 
@@ -48,6 +60,9 @@ private:
 	void clearRow(int row);
 
 	void reset();
+	void nextLevel();
+	void calcHowManyLinesInThisLevelLeft();
+	void calcDelay();
 
 	void draw();
 

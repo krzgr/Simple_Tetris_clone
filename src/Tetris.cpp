@@ -21,8 +21,8 @@ const std::array<std::array<int, 4>, 7> Tetris::tetrominos
     std::array<int, 4>{3,1,2,5}, // T
     std::array<int, 4>{3,0,1,5}, // L
     std::array<int, 4>{3,1,4,5}, // J
-    std::array<int, 4>{2,3,0,5}, // Z
-    std::array<int, 4>{2,3,1,4}  // S
+    std::array<int, 4>{2,3,1,4}, // Z
+    std::array<int, 4>{2,3,0,5}  // S
 };
 
 const int Tetris::sizeColors = sizeof(Tetris::colors) / sizeof(Tetris::colors[0]);
@@ -47,7 +47,8 @@ void Tetris::draw()
 
     for (auto& piece : tetromino)
     {
-        brick.setPosition(sf::Vector2f(float(piece.first * (brickSize + padding) + padding), float(piece.second * (brickSize + padding) + padding)));
+        brick.setPosition(sf::Vector2f(float(piece.first * (brickSize + padding) + padding),
+                                       float(piece.second * (brickSize + padding) + padding)));
         window.draw(brick);
     }
         
@@ -59,6 +60,8 @@ void Tetris::run()
 {
     window.create(sf::VideoMode((brickSize + padding) * cols + padding, (brickSize + padding) * rows + padding), 
         "Tetris v1.0", sf::Style::Titlebar | sf::Style::Close);
+
+    window.setFramerateLimit(framerateLimit);
 
     while (window.isOpen())
     {
@@ -75,13 +78,17 @@ void Tetris::run()
                     switch (event.key.code)
                     {
                     case sf::Keyboard::Up:    tryRotation(); break;
-                    case sf::Keyboard::Down:  drop(); break;
+                    case sf::Keyboard::Down:  softDrop = true; calcDelay(); break;
                     case sf::Keyboard::Left:  moveLeft(); break;
                     case sf::Keyboard::Right: moveRight(); break;
                     }
-
-                    draw();
                 }
+                else if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Down)
+                    {
+                        softDrop = false;
+                        calcDelay();
+                    }
+                draw();
             }
         }
 
@@ -96,13 +103,54 @@ void Tetris::reset()
         for (auto& val : row)
             val = 0;
 
+    score = 0;
+
     genNewTetromino();
+}
+
+void Tetris::nextLevel()
+{
+    level++;
+    calcHowManyLinesInThisLevelLeft();
+    calcDelay();
+}
+
+void Tetris::calcHowManyLinesInThisLevelLeft()
+{
+    if (level <= 9)
+        linesBeforeLevelIncreases = level * 10 + 10;
+    else if (level <= 15)
+        linesBeforeLevelIncreases = 100;
+    else if (level <= 25)
+        linesBeforeLevelIncreases = level * 10 - 50;
+    else
+        linesBeforeLevelIncreases = 200;
+}
+
+void Tetris::calcDelay()
+{
+    int framesPerGridcell;
+
+    if (level <= 8)
+        framesPerGridcell = zeroLevelFramesPerGridcell - 5 * level;
+    else if (level <= 18)
+        framesPerGridcell = 9 - (level + 2) / 3;
+    else if (level <= 28)
+        framesPerGridcell = 2;
+    else
+        framesPerGridcell = 1;
+
+    delay = framesPerGridcell * 1000 / framerateLimit;
+
+    if (softDrop)
+        delay = delay / 4;
 }
 
 Tetris::Tetris()
     :event(), brick(sf::Vector2f(brickSize, brickSize)), grid(rows), 
         tetrominoDistribution(0, (int)tetrominos.size() - 1), colorDistribution(1, sizeColors - 1),
-        rng((unsigned)std::chrono::system_clock::now().time_since_epoch().count())
+        rng((unsigned)std::chrono::system_clock::now().time_since_epoch().count()),
+        level(0), score(0), softDrop(false)
 {
 
     for (int i = 0; i < rows; i++)
@@ -112,6 +160,9 @@ Tetris::Tetris()
         for (int j = 0; j < cols; j++)
             grid[i].emplace_back(0);
     }
+
+    calcHowManyLinesInThisLevelLeft();
+    calcDelay();
 
     genNewTetromino();
 }
@@ -123,10 +174,10 @@ Tetris::~Tetris()
 
 void Tetris::rotateLeft()
 {
-    if (tetrominoID == 1) // O
+    if (tetrominoID == 1)
         return;
-    else if ((tetrominoID == 0 && tetromino[0].second == tetromino[1].second) // Long
-          || (tetrominoID >= 5 && tetromino[0].second == tetromino[1].second)) // S and Z
+    else if ((tetrominoID == 0 && tetromino[0].second == tetromino[1].second)  // Long
+          || (tetrominoID >= 5 && tetromino[0].second == tetromino[1].second)) // S and Z 
     {
         rotateRight();
         return;
@@ -139,6 +190,29 @@ void Tetris::rotateLeft()
     {
         const int x1 = tetromino[i].second - y + x;
         const int y1 = -tetromino[i].first + x + y;
+        tetromino[i].first = x1;
+        tetromino[i].second = y1;
+    }
+}
+
+void Tetris::rotateRight()
+{
+    if (tetrominoID == 1)
+        return;
+    else if ((tetrominoID == 0 && tetromino[0].first == tetromino[1].first)  // Long
+          || (tetrominoID >= 5 && tetromino[0].first == tetromino[1].first)) // S and Z
+    {
+        rotateLeft();
+        return;
+    }
+
+    int x = tetromino[0].first;
+    int y = tetromino[0].second;
+
+    for (int i = 1; i < tetromino.size(); i++)
+    {
+        const int x1 = -tetromino[i].second + y + x;
+        const int y1 = tetromino[i].first - x + y;
         tetromino[i].first = x1;
         tetromino[i].second = y1;
     }
@@ -172,29 +246,6 @@ void Tetris::tryRotation()
         rotateLeft();
 }
 
-void Tetris::rotateRight()
-{
-    if (tetrominoID == 1) // O
-        return;
-    else if ((tetrominoID == 0 && tetromino[0].first == tetromino[1].first)  // Long
-          || (tetrominoID >= 5 && tetromino[0].first == tetromino[1].first)) // S and Z
-    {
-        rotateLeft();
-        return;
-    }
-
-    int x = tetromino[0].first;
-    int y = tetromino[0].second;
-
-    for (int i = 1; i < tetromino.size(); i++)
-    {
-        const int x1 = -tetromino[i].second + y + x;
-        const int y1 = tetromino[i].first - x + y;
-        tetromino[i].first = x1;
-        tetromino[i].second = y1;
-    }
-}
-
 void Tetris::genNewTetromino()
 {
     tetrominoID = (uint8_t)tetrominoDistribution(rng);
@@ -205,19 +256,21 @@ void Tetris::genNewTetromino()
         tetromino[i].first = tetrominos[tetrominoID][i] % 2 + (cols / 2) - 1;
         tetromino[i].second = tetrominos[tetrominoID][i] / 2;
     }
-    
-    rotateRight();
-    if (tetrominoID == 0)
-    {
-        for (auto& piece : tetromino)
-            piece.second -= 2;
-        //we need to push bricks up
-    }
-    else if (tetrominoID >= 5) // S and Z
+
+    if (tetrominoID == 2 || tetrominoID == 3 || tetrominoID == 4) // T, L and J
+        rotateLeft();
+    else
+        rotateRight();
+
+    if (tetrominoID >= 2) // NOT Long, O
     {
         for (auto& piece : tetromino)
             piece.second--;
-        //here also
+    }
+    else if (tetrominoID == 0) // Long
+    {
+        for (auto& piece : tetromino)
+            piece.second -= 2;
     }
 
     if (isTetrominoColliding())
@@ -228,6 +281,9 @@ void Tetris::drop()
 {
     for (auto& piece : tetromino)
         piece.second++;
+
+    if (softDrop)
+        score += 10;
 
     if (isTetrominoColliding())
     {
@@ -245,12 +301,30 @@ void Tetris::drop()
             grid[piece.second][piece.first] = tetrominoColorID;
         }
 
+        int destroyedLines = 0;
+
         for(int i = max_y; i >= min_y; i--)
             if (isRowFilled(i))
             {
                 clearRow(i);
                 i++;
+                destroyedLines++;
+                linesBeforeLevelIncreases--;
+                if (linesBeforeLevelIncreases == 0)
+                {
+                    level++;
+                    calcHowManyLinesInThisLevelLeft();
+                    calcDelay();
+                }
             }
+
+        switch (destroyedLines)
+        {
+            case 1: score += (level + 1) * 40; break;
+            case 2: score += (level + 1) * 100; break;
+            case 3: score += (level + 1) * 300; break;
+            case 4: score += (level + 1) * 1200; break;
+        }
 
         genNewTetromino();
     }
