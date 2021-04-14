@@ -54,6 +54,8 @@ void Tetris::draw()
         window.draw(brick);
     }
     
+    /*Rendering sidebar*/
+
     scoreText.setString("Score");
     window.draw(scoreText);
     scoreText.move(sf::Vector2f(0.0f, (float)offsetBetweenUpperString));
@@ -76,7 +78,26 @@ void Tetris::draw()
 
     scoreText.setString(std::to_string(linesBeforeLevelIncreases));
     window.draw(scoreText);
-    scoreText.move(sf::Vector2f(0.0f, -5.0f * (float)offsetBetweenUpperString));
+    scoreText.move(sf::Vector2f(0.0f, (float)offsetBetweenUpperString));
+
+    scoreText.setString("Next");
+    window.draw(scoreText);
+    scoreText.move(sf::Vector2f(0.0f, -6.0f * (float)offsetBetweenUpperString));
+
+    /*Next tetromino rendering*/
+
+    int x = nextTetromino[0].first;
+    int y = nextTetromino[0].second;
+
+
+    brick.setFillColor(colors[nextTetrominoColorID]);
+
+    for (auto& piece : nextTetromino)
+    {
+        brick.setPosition(sf::Vector2f(nextTetrominoRenderX + (piece.first - x) * (brickSize + padding),
+                nextTetrominoRenderY + (piece.second - y) * (brickSize + padding)));
+        window.draw(brick);
+    }
 
     window.display();
 }
@@ -129,7 +150,12 @@ void Tetris::reset()
             val = 0;
 
     score = 0;
+    level = 0;
 
+    calcHowManyLinesInThisLevelLeft();
+    calcDelay();
+
+    genNewTetromino();
     genNewTetromino();
 }
 
@@ -165,10 +191,10 @@ void Tetris::calcDelay()
     else
         framesPerGridcell = 1;
 
-    delay = framesPerGridcell * 1000 / framerateLimit;
+    delay = (framesPerGridcell * 1000) / framerateLimit;
 
     if (softDrop)
-        delay = delay / 4;
+        delay = delay / 2;
 }
 
 Tetris::Tetris()
@@ -198,6 +224,21 @@ Tetris::Tetris()
 
     scoreText.setPosition(sf::Vector2f(padding + cols * (brickSize + padding) + textLeftOffset, (float)textTopOffset));
 
+    /*Generating here empty nextTetromino piece*/
+   
+    for (auto& piece : nextTetromino)
+    {
+        piece.first = 0;
+        piece.second = 0;
+    }
+
+    nextTetrominoID = 1;
+
+    /*In function genNewTetromino(), tetromino will copy data from nextTetromino*/
+    /*and nextTetromino will be generated*/
+    /*We do it twice in ordet to have two tetrominos generated (next and current)*/
+
+    genNewTetromino();
     genNewTetromino();
 }
 
@@ -282,13 +323,20 @@ void Tetris::tryRotation()
 
 void Tetris::genNewTetromino()
 {
-    tetrominoID = (uint8_t)tetrominoDistribution(rng);
-    tetrominoColorID = (uint8_t)colorDistribution(rng);
+    /*We move next tetromino into current used tetromino*/
+    for (int i = 0; i < tetromino.size(); i++)
+        tetromino[i] = nextTetromino[i];
 
-    for (int i = 0; i < 4; i++)
+    tetrominoColorID = nextTetrominoColorID;
+    tetrominoID = nextTetrominoID;
+
+    nextTetrominoID = (uint8_t)tetrominoDistribution(rng);
+    nextTetrominoColorID = (uint8_t)colorDistribution(rng);
+
+    for (int i = 0; i < tetromino.size(); i++)
     {
-        tetromino[i].first = tetrominos[tetrominoID][i] % 2 + (cols / 2) - 1;
-        tetromino[i].second = tetrominos[tetrominoID][i] / 2;
+        nextTetromino[i].first = tetrominos[nextTetrominoID][i] % 2 + (cols / 2) - 1;
+        nextTetromino[i].second = tetrominos[nextTetrominoID][i] / 2;
     }
 
     if (tetrominoID == 2 || tetrominoID == 3 || tetrominoID == 4) // T, L and J

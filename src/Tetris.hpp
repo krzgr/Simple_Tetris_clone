@@ -16,6 +16,8 @@ public:
 	static const int brickSize = 35;
 	static const int padding = 3;
 	static const int sideBarWidth = 300;
+	static const int nextTetrominoRenderY = padding + 14 * (brickSize + padding);
+	static const int nextTetrominoRenderX = padding + (cols + 3) * (brickSize + padding);
 
 	static const int textCharSize = 32;
 	static const sf::Color textColor;
@@ -51,6 +53,10 @@ private:
 	std::array<std::pair<int, int>, 4> tetromino;
 	uint8_t tetrominoColorID;
 	uint8_t tetrominoID;
+
+	std::array<std::pair<int, int>, 4> nextTetromino;
+	uint8_t nextTetrominoColorID;
+	uint8_t nextTetrominoID;
 
 	std::mt19937 rng;
 	std::uniform_int_distribution<int> colorDistribution;
