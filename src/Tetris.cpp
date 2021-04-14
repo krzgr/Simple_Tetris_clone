@@ -1,6 +1,8 @@
 #include "Tetris.hpp"
 
-const sf::Color backgrundColor = sf::Color(28, 47, 57);
+const sf::Color Tetris::backgroundColor = sf::Color(28, 47, 57);
+
+const sf::Color Tetris::textColor = sf::Color(255, 255, 255);
 
 const sf::Color Tetris::colors[] =
 {
@@ -29,7 +31,7 @@ const int Tetris::sizeColors = sizeof(Tetris::colors) / sizeof(Tetris::colors[0]
 
 void Tetris::draw()
 {
-    window.clear(backgrundColor);
+    window.clear(backgroundColor);
     brick.setPosition(sf::Vector2f((float)padding, (float)padding));
 
     for (auto& row : grid)
@@ -51,14 +53,37 @@ void Tetris::draw()
                                        float(piece.second * (brickSize + padding) + padding)));
         window.draw(brick);
     }
-        
+    
+    scoreText.setString("Score");
+    window.draw(scoreText);
+    scoreText.move(sf::Vector2f(0.0f, (float)offsetBetweenUpperString));
+    
+    scoreText.setString(std::to_string(score));
+    window.draw(scoreText);
+    scoreText.move(sf::Vector2f(0.0f, (float)offsetBetweenUpperString));
+
+    scoreText.setString("Level");
+    window.draw(scoreText);
+    scoreText.move(sf::Vector2f(0.0f, (float)offsetBetweenUpperString));
+
+    scoreText.setString(std::to_string(level));
+    window.draw(scoreText);
+    scoreText.move(sf::Vector2f(0.0f, (float)offsetBetweenUpperString));
+
+    scoreText.setString("Lines left");
+    window.draw(scoreText);
+    scoreText.move(sf::Vector2f(0.0f, (float)offsetBetweenUpperString));
+
+    scoreText.setString(std::to_string(linesBeforeLevelIncreases));
+    window.draw(scoreText);
+    scoreText.move(sf::Vector2f(0.0f, -5.0f * (float)offsetBetweenUpperString));
 
     window.display();
 }
 
 void Tetris::run()
 {
-    window.create(sf::VideoMode((brickSize + padding) * cols + padding, (brickSize + padding) * rows + padding), 
+    window.create(sf::VideoMode((brickSize + padding) * cols + padding + sideBarWidth, (brickSize + padding) * rows + padding), 
         "Tetris v1.0", sf::Style::Titlebar | sf::Style::Close);
 
     window.setFramerateLimit(framerateLimit);
@@ -163,6 +188,15 @@ Tetris::Tetris()
 
     calcHowManyLinesInThisLevelLeft();
     calcDelay();
+
+    if (!scoreFont.loadFromFile("../../res/Ubuntu-Regular.ttf"))
+        exit(-1);
+
+    scoreText.setFont(scoreFont);
+    scoreText.setCharacterSize(textCharSize);
+    scoreText.setFillColor(textColor);
+
+    scoreText.setPosition(sf::Vector2f(padding + cols * (brickSize + padding) + textLeftOffset, (float)textTopOffset));
 
     genNewTetromino();
 }

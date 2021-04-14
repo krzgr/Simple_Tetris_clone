@@ -1,9 +1,12 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/Font.hpp>
 #include <vector>
 #include <random>
 #include <array>
 #include <chrono>
+#include <string>
 
 class Tetris
 {
@@ -12,7 +15,14 @@ public:
 	static const int cols = 10;
 	static const int brickSize = 35;
 	static const int padding = 3;
-	static const int sideBarHeight = 50;
+	static const int sideBarWidth = 300;
+
+	static const int textCharSize = 32;
+	static const sf::Color textColor;
+
+	static const int textTopOffset = 100;
+	static const int textLeftOffset = 70;
+	static const int offsetBetweenUpperString = 50;
 
 	static const unsigned int framerateLimit = 60;
 	static const int zeroLevelFramesPerGridcell = 48;
@@ -27,6 +37,8 @@ private:
 	sf::RectangleShape brick;
 	sf::Event event;
 	sf::Clock clock;
+	sf::Font scoreFont;
+	sf::Text scoreText;
 	std::vector<std::vector<uint8_t>> grid;
 
 	int score;
