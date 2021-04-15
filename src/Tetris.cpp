@@ -215,7 +215,7 @@ Tetris::Tetris()
     calcHowManyLinesInThisLevelLeft();
     calcDelay();
 
-    if (!scoreFont.loadFromFile("../../res/Ubuntu-Regular.ttf"))
+    if (!scoreFont.loadFromFile("../res/Ubuntu-Regular.ttf"))
         exit(-1);
 
     scoreText.setFont(scoreFont);
