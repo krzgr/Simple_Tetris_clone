@@ -124,7 +124,11 @@ void Tetris::run()
                     switch (event.key.code)
                     {
                     case sf::Keyboard::Up:    tryRotation(); break;
-                    case sf::Keyboard::Down:  softDrop = true; calcDelay(); break;
+                    case sf::Keyboard::Down:
+                        if(!softDrop)
+                        {
+                            softDrop = true; calcDelay();
+                        } break;
                     case sf::Keyboard::Left:  moveLeft(); break;
                     case sf::Keyboard::Right: moveRight(); break;
                     }
@@ -180,7 +184,7 @@ void Tetris::calcHowManyLinesInThisLevelLeft()
 
 void Tetris::calcDelay()
 {
-    int framesPerGridcell;
+    unsigned int framesPerGridcell;
 
     if (level <= 8)
         framesPerGridcell = zeroLevelFramesPerGridcell - 5 * level;
@@ -191,10 +195,10 @@ void Tetris::calcDelay()
     else
         framesPerGridcell = 1;
 
-    delay = (framesPerGridcell * 1000) / framerateLimit;
+    if(softDrop)
+        framesPerGridcell = 2;
 
-    if (softDrop)
-        delay = delay / 2;
+    delay = (framesPerGridcell * 1000) / framerateLimit;
 }
 
 Tetris::Tetris()
