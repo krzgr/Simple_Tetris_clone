@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 project(Tetris)
 
-file(GLOB SRC_FILES
-	src/*
+set(SRC_FILES
+	src/main.cpp
+	src/Tetris.hpp
+	src/Tetris.cpp
 )
 
 add_subdirectory(external/SFML)

@@ -207,14 +207,7 @@ Tetris::Tetris()
         rng((unsigned)std::chrono::system_clock::now().time_since_epoch().count()),
         level(0), score(0), softDrop(false)
 {
-
-    for (int i = 0; i < rows; i++)
-    {
-        grid.emplace_back(std::vector<uint8_t>(cols));
-
-        for (int j = 0; j < cols; j++)
-            grid[i].emplace_back(0);
-    }
+    grid = std::vector<std::vector<uint8_t>>(rows, std::vector<uint8_t>(cols, 0));
 
     calcHowManyLinesInThisLevelLeft();
     calcDelay();
