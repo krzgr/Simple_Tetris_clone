@@ -1,6 +1,6 @@
 # Simple_Tetris_clone
 This is Tetris clone.
-
+# ![Tetris clone screenshot](tetris_clone_screenshot.PNG)
 # Requirements
 Here is a list of what you need to install before building on linux:
 * git
