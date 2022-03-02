@@ -23,8 +23,7 @@ More information about building SFML library, you can find [here](https://www.sf
 
 # Build
 ```bash
-git submodule init
-git submodule update
+git clone --recursive git@github.com:krzgr/Simple_Tetris_clone.git
 
 cd build
 cmake -DBUILD_SHARED_LIBS=OFF -DSFML_USE_STATIC_STD_LIBS=ON ..
